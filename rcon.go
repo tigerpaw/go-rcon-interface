@@ -13,7 +13,7 @@ import (
 	steam "github.com/kidoman/go-steam"
 )
 
-const version string = "0.0.1"
+const version string = "0.1.1"
 
 func getRconCredentials(debug bool) (string, string) {
 	var addr, pass string
@@ -24,7 +24,7 @@ func getRconCredentials(debug bool) (string, string) {
 			input := strings.Split(addr, ":")
 			fmt.Println(input[0] + ":" + input[1])
 		} else {
-			addr = addr + ":27015"
+			addr += ":27015"
 		}
 	} else {
 		fmt.Println("Incorrect address format, Example: 1.3.3.7:27017")
