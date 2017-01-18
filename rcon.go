@@ -17,7 +17,7 @@ const version string = "0.2.2"
 func getRconCredentials(debug bool) (string, string) {
 	var addr, pass, input string
 	/*if debug {
-		addr = "maat.twosuns.net:27015"
+		addr = "162.248.94.94:27015"
 		pass = "AReallyGoodPassword"
 		return addr, pass
 	}*/
