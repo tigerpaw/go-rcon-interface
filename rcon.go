@@ -5,24 +5,31 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"runtime"
+	"regexp"
 	"strings"
-	"time"
 
 	log "github.com/Sirupsen/logrus"
 	steam "github.com/kidoman/go-steam"
 )
 
-const version string = "0.1.1"
+const version string = "0.2.0"
 
 func getRconCredentials(debug bool) (string, string) {
-	var addr, pass string
+	var addr, pass, input string
+	if debug {
+		addr = "###"
+		pass = "###"
+		return addr, pass
+	}
 	fmt.Print("Enter RCON Address & Port (if not 27015): ")
-	fmt.Scanln(&addr)
-	if addr != "" && strings.Count(addr, ":") <= 1 {
-		if strings.ContainsAny(addr, ":") {
-			input := strings.Split(addr, ":")
-			fmt.Println(input[0] + ":" + input[1])
+	fmt.Scanln(&input)
+	if input != "" && strings.Count(input, ":") <= 1 {
+		chk, err := regexp.MatchString("^[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}:[0-9]{1,5}$", input)
+		if err != nil {
+			fmt.Println(err)
+		}
+		if strings.ContainsAny(input, ":") && chk {
+			addr = input
 		} else {
 			addr += ":27015"
 		}
@@ -54,10 +61,36 @@ func sendRconCommand(addr string, pass string, cmd string) (string, error) {
 	return resp, nil
 }
 
-// add function for processing input & intercepting commands
+func getRconCommand() string {
+	var cmd string
+	reader := bufio.NewReader(os.Stdin)
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	if string([]rune(input)[0]) == "!" {
+		switch string([]rune(input)) {
+		case "!exit":
+			// placeholder
+			os.Exit(0)
+		default:
+			fmt.Println("Intercepted command: " + input)
+			cmd = ""
+		}
+	} else {
+		cmd = input
+	}
+
+	return cmd
+}
+
+func checkResponse(response string) string {
+	return response
+}
 
 func main() {
-	fmt.Println("Source Dedicated Server RCON Interface (" + version + ")")
+	fmt.Println("\nSource Dedicated Server RCON Interface (" + version + ")\n")
 	debug := flag.Bool("debug", false, "debug")
 	flag.Parse()
 	if *debug {
@@ -66,7 +99,7 @@ func main() {
 
 	addr, pass := getRconCredentials(*debug)
 	if addr == "" {
-		fmt.Println("What am I supposed to do with empty strings?")
+		fmt.Println("What am I supposed to do with an empty string?")
 		return
 	}
 
@@ -78,22 +111,18 @@ func main() {
 	} else if response == "good" {
 		for {
 			fmt.Printf("[%s]RCON> ", addr)
-			var cmd string
-			reader := bufio.NewReader(os.Stdin)
-			input, err := reader.ReadString('\n')
-			if err != nil {
-				fmt.Println(err)
+			cmd := getRconCommand()
+			if cmd == "" {
+				continue
 			}
-			// sanitize input
-			cmd = input
 			if *debug {
-				fmt.Println("[Debug] Command: " + cmd)
+				fmt.Println("[Debug] User Input: " + cmd)
 			}
 			response, err := sendRconCommand(addr, pass, cmd)
 			if err != nil {
 				fmt.Println(err)
 			}
-			fmt.Println(response)
+			fmt.Println(checkResponse(response))
 		}
 	}
 }
