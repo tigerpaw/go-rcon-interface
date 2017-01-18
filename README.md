@@ -1,6 +1,8 @@
 # go-rcon-interface
 Valve Source dedicated server remote console interface written (poorly) in Go
 
+Latest Binary: [Download](https://s3-us-west-2.amazonaws.com/tigerpaw-release/rcon.exe)
+
 ## Thanks
 This uses code from [kidoman/go-steam](https://github.com/kidoman/go-steam)
 
