@@ -12,34 +12,40 @@ import (
 	steam "github.com/kidoman/go-steam"
 )
 
-const version string = "0.2.0"
+const version string = "0.2.1"
 
 func getRconCredentials(debug bool) (string, string) {
 	var addr, pass, input string
-	if debug {
-		addr = "###"
-		pass = "###"
-		return addr, pass
-	}
 	fmt.Print("Enter RCON Address & Port (if not 27015): ")
 	fmt.Scanln(&input)
 	if input != "" && strings.Count(input, ":") <= 1 {
-		chk, err := regexp.MatchString("^[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}:[0-9]{1,5}$", input)
+		validip, err := regexp.MatchString("^[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}:[0-9]{1,5}$", input)
+		validhost, err := regexp.MatchString("^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]).)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9-]*[A-Za-z0-9])$", input)
 		if err != nil {
 			fmt.Println(err)
 		}
-		if strings.ContainsAny(input, ":") && chk {
-			addr = input
+		if strings.ContainsAny(input, ":") {
+			if validip || validhost {
+				if debug {
+					fmt.Printf("[Debug] Valid IP Address: %t\n[Debug] Valid Hostname %t\n", validip, validhost)
+				}
+				addr = input
+			} else {
+				fmt.Println("Invalid address value")
+			}
 		} else {
-			addr += ":27015"
+			addr = input + ":27015"
 		}
 	} else {
 		fmt.Println("Incorrect address format, Example: 1.3.3.7:27017")
 	}
-	fmt.Print("Enter RCON Password: ")
-	fmt.Scanln(&pass)
 
-	return addr, pass
+	passPrompt := "Enter RCON Password: "
+	fmt.Print(passPrompt)
+	fmt.Scanln(&pass)
+	fmt.Println("\r" + passPrompt + "*********")
+
+	return strings.TrimSpace(addr), pass
 }
 
 func sendRconCommand(addr string, pass string, cmd string) (string, error) {
